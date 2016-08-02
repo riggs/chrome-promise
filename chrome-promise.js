@@ -40,22 +40,30 @@
 
     function setPromiseFunction(fn, thisArg) {
 
-      return function() {
-        var args = arguments;
+      return function(...args) {
 
         return new Promise(function(resolve, reject) {
-          function callback() {
-            var err = runtime.lastError;
+          function callback(...results) {
+            var err = chrome.runtime.lastError;
             if (err) {
               reject(err);
             } else {
-              resolve.apply(null, arguments);
+              switch (results.length) {
+                case 0:
+                  resolve();
+                  break;
+                case 1:
+                  resolve(results[0]);
+                  break;
+                default:
+                  resolve(results);
+              }
             }
           }
 
-          push.call(args, callback);
+          args.push(callback);
 
-          fn.apply(thisArg, args);
+          fn.apply(self, args);
         });
 
       };
